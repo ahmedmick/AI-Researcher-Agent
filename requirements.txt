@@ -1,0 +1,9 @@
+python-dotenv
+groq
+google-genai
+tavily-python
+requests
+trafilatura
+rich
+arabic-reshaper
+python-bidi
