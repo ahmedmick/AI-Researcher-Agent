@@ -220,6 +220,5 @@ __marimo__/
 .streamlit/secrets.toml
 
 # project files
-Groq_web_search.py
 arabic_parser.py
 research-agent-plan.md
