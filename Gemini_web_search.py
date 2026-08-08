@@ -55,7 +55,7 @@ def is_cited(source_num: int, text: str) -> bool:
 
     return bool(re.search(pattern, text))
 
-def start_agent():
+def start_gemini_agent():
     load_dotenv()
     console = Console()
 
