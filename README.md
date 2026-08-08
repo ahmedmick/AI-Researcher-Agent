@@ -78,9 +78,7 @@ You'll need free accounts with:
 
 ### 3. Run it
 ```bash
-python Gemini_web_search.py
-# or
-python Groq_web_search.py
+python main.py
 ```
 
 You'll be dropped into an interactive prompt:
