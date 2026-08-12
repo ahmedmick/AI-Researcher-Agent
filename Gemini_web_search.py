@@ -55,7 +55,7 @@ def start_gemini_agent():
     parser = ArabicParser()
 
     client = genai.Client(api_key=os.environ.get("Gemini_API_KEY"))
-    
+
     tools_schema = [
         {
             "type": "function",
@@ -95,14 +95,15 @@ def start_gemini_agent():
 
     available_functions = {"web_search": web_search, "fetch_page": fetch_page}
 
-    system_instruction=(
+    system_instruction = (
         "You are a research assistant. Use web_search to find current information "
         "before answering.\n\n"
         "Citation rules:\n"
         "- Each search result you receive is numbered, e.g. [1], [2], [3].\n"
         "- When you state a fact from a source, cite it inline using that exact number, e.g. 'Fast inference reduces cost [2].'\n"
         "- Do NOT invent your own citation format.\n"
-        "- Only cite sources that were actually returned by web_search. Never fabricate a URL."
+        "- Only cite sources that were actually returned by web_search. Never fabricate a URL.\n"
+        "- This citation format ([1], [2], etc.) must be used regardless of what language you are responding in, including Arabic. Do not omit citation numbers when answering in Arabic.\n"
     )
 
     while True:
