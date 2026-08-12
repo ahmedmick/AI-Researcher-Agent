@@ -141,6 +141,10 @@ Both the legacy Windows Console Host (`conhost.exe`) and modern Windows Terminal
 
 This was diagnosed by testing terminal output programmatically (not just visually) after discovering the terminal itself was misrepresenting already-correct string data — see the Lessons Learned section below.
 
+**Some cited source links may occasionally return 404 or "page not found," even though the citation itself is accurate.**
+
+Every URL in the sources table is the real, unmodified URL returned by Tavily's search API at the time of the query — the agent never fabricates or mistypes a link (see the citation-verification approach above). However, search indexes crawl and cache snapshots of the web, and the underlying pages can be moved, restructured, or taken down by their owners *after* being indexed. When this happens, the citation is still correctly attributed to the source the model actually used, but the live link may no longer resolve. This was confirmed directly (fetching a reported broken link independently returned the same 404), ruling out a numbering or storage bug in the agent itself. There is currently no automatic link-validation step; this is treated as an inherent, unavoidable characteristic of live web search rather than something to engineer around.
+
 ---
 
 ## Lessons Learned
