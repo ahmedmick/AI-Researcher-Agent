@@ -80,6 +80,15 @@ You'll need free accounts with:
 ```bash
 python main.py
 ```
+Choose your perfered model:
+```
+Welcome to AI Researcher Agent
+
+- Enter '1' for Gemini Model
+- Enter '2' for Groq/OpenAI Model(in progress)
+Choose your perfered AI Model:
+```
+### $\color{#FF0000}{Note:}$ Gemini Model is the only model available right now
 
 You'll be dropped into an interactive prompt:
 ```
