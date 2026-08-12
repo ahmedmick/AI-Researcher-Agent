@@ -14,9 +14,9 @@ Instead of using a framework (LangChain, etc.), this project implements the core
 - 📚 **Verified citations** — every `[1]`, `[2]`, etc. in the final answer is checked against real search results in code (not trusted from the model's own text), so citations can't be fabricated or mistyped
 - 🧹 **Broken-link filtering** — search results with malformed/relative URLs are automatically filtered out before reaching the model
 - 🔄 **Retry with exponential backoff** — handles rate limits and transient API errors gracefully instead of crashing
-- 💬 **Interactive CLI** — ask multiple questions in one running session
+- 💬 **Interactive CLI** — ask multiple questions in one running session, with a model-selection menu on startup
 - 🎨 **Rich terminal formatting** — Markdown-style output (headers, bold, tables) rendered properly in the terminal via [`rich`](https://github.com/Textualize/rich)
-- 🌍 **Arabic language support** *(in progress)* — right-to-left text reshaping and a custom Markdown-to-terminal renderer, since standard Markdown rendering breaks under Arabic bidi text reordering
+- 🌍 **Arabic language support** — a custom-built Markdown-to-terminal renderer with right-to-left text reshaping, since standard Markdown rendering breaks under Arabic bidi text reordering. Handles headers, bullets, numbered lists, and inline bold text mixed with Arabic, English, and citation markers, with automatic terminal-aware rendering (see [Known Limitations](#known-limitations))
 
 ---
 
@@ -36,14 +36,18 @@ This project has two parallel implementations of that loop:
 - **Groq** (`llama-3.3-70b-versatile` / `openai/gpt-oss-120b`) using the standard OpenAI-style chat completions + `tools` API
 - **Gemini** (`gemini-3.6-flash`) using Google's newer **Interactions API**, a session-based API with a different shape (`previous_interaction_id`, `steps`, `function_result` blocks) — built as a second implementation specifically to understand how the same agentic pattern looks across genuinely different API designs
 
+`main.py` is the single entry point — it presents a model-selection menu, then hands off to whichever agent implementation you choose.
+
 ---
 
 ## Project Structure
 
 ```
 research-agent/
+├── main.py                  # entry point — model selection menu, launches the chosen agent
 ├── tools.py                 # web_search (Tavily) and fetch_page (trafilatura) tool implementations
-├── Groq_web_search.py       # agent loop using the Groq API
+├── arabic_parser.py         # ArabicParser — reusable RTL/bidi Markdown-to-terminal renderer
+├── Groq_web_search.py       # agent loop using the Groq API (in progress)
 ├── Gemini_web_search.py     # agent loop using the Gemini Interactions API
 ├── .env                     # API keys and config (not committed)
 └── README.md
@@ -69,7 +73,7 @@ Create a `.env` file in the project root:
 GROQ_API_KEY=your_groq_key
 Gemini_API_KEY=your_gemini_key
 TAVILY_API_KEY=your_tavily_key
-MODEL=gemini-3.6-flash   # or a Groq model, depending on which script you run
+MODEL=gemini-3.6-flash   # or a Groq model, depending on which agent you run
 ```
 
 You'll need free accounts with:
@@ -80,13 +84,13 @@ You'll need free accounts with:
 ```bash
 python main.py
 ```
-Choose your perfered model:
+Choose your preferred model:
 ```
 Welcome to AI Researcher Agent
 
 - Enter '1' for Gemini Model
-- Enter '2' for Groq/OpenAI Model(in progress)
-Choose your perfered AI Model:
+- Enter '2' for Groq/OpenAI Model (in progress)
+Choose your preferred AI Model:
 ```
 ### $\color{#FF0000}{Note:}$ Gemini Model is the only model available right now
 
@@ -94,7 +98,7 @@ You'll be dropped into an interactive prompt:
 ```
 Ask a question (or type 'exit' to quit):
 ```
-Type `exit` at any time to quit.
+Type `exit` at any time to quit. Questions can be asked in English or Arabic — the agent detects the language automatically and renders the response accordingly.
 
 ---
 
@@ -121,6 +125,24 @@ Sources
 
 ---
 
+## Known Limitations
+
+**Arabic rendering depends on which terminal you use, due to an unresolved upstream Windows bug.**
+
+Both the legacy Windows Console Host (`conhost.exe`) and modern Windows Terminal currently implement Arabic *letter shaping* but not full *bidi reordering* — this is an acknowledged, open issue in Microsoft's own `microsoft/terminal` repository, not something fixable from application code. As a workaround:
+
+- `ArabicParser` detects this and manually reshapes + reorders Arabic text (via `arabic-reshaper` + `python-bidi`) before printing, so **standard PowerShell / Windows Terminal display Arabic correctly** — with one remaining cosmetic quirk: since these terminals have no native concept of RTL paragraph alignment, output is right-aligned manually (`rich.align.Align.right`) to compensate.
+- **mintty-based terminals** (Git Bash, MSYS2) already implement full native bidi support. `ArabicParser` detects this environment (via the `MSYSTEM` environment variable) and skips its own reshaping/reordering step entirely — applying it on top of mintty's own correct handling would double-process the text and produce garbled output.
+- If you want to run genuine PowerShell commands inside a terminal with native bidi support (avoiding the manual reshaping path entirely), you can launch PowerShell through `winpty`:
+  ```bash
+  winpty powershell
+  ```
+  from a Git Bash prompt — this gives you a real PowerShell session, just hosted by mintty's renderer.
+
+This was diagnosed by testing terminal output programmatically (not just visually) after discovering the terminal itself was misrepresenting already-correct string data — see the Lessons Learned section below.
+
+---
+
 ## Lessons Learned
 
 This project was built step by step, debugging real issues as they came up rather than following a tutorial. Some of the more interesting problems along the way:
@@ -135,13 +157,17 @@ This project was built step by step, debugging real issues as they came up rathe
 
 **Nested loops need explicit exit signals, not just `break`.** A recurring bug pattern: `break` only exits the *innermost* loop, which caused several rounds of confusing behavior once a retry loop was nested inside the main research loop. Using boolean flags (`is_completed`, `failed`) checked *after* the inner loop, instead of relying on `break` alone, fixed this cleanly — a pattern worth remembering for any future nested-loop control flow.
 
-**Right-to-left language support exposed a genuine conflict between two libraries.** Arabic responses initially rendered with visibly broken letter shaping in the terminal. Fixing that (via `arabic_reshaper` + `python-bidi`) then broke `rich`'s Markdown parser, because bidi text reordering happens *after* Markdown syntax markers (`##`, `**`) need to be read in their original position. This led to building a small custom Markdown-to-terminal renderer specifically for Arabic output — a good example of how fixing one layer of a problem can surface a conflict in the layer above it.
+**Right-to-left language support exposed a genuine conflict between two libraries.** Arabic responses initially rendered with visibly broken letter shaping in the terminal. Fixing that (via `arabic_reshaper` + `python-bidi`) then broke `rich`'s Markdown parser, because bidi text reordering happens *after* Markdown syntax markers (`##`, `**`) need to be read in their original position. This led to building a small custom Markdown-to-terminal renderer specifically for Arabic output.
+
+**Reshaping and bidi-reordering text in isolated fragments breaks both operations.** An early version of the Arabic renderer split each line into bold/non-bold segments and reshaped each piece separately, to preserve inline `**bold**` styling. This caused two distinct symptoms: broken letter joining at segment boundaries (since `arabic_reshaper` needs full word context to pick correct letter forms) and incorrect overall word order (since `get_display()` needs the *whole* line to reorder correctly). The fix was to reshape/reorder the **entire line at once**, using uniquely numbered invisible-ish sentinel markers (`@@B0@@`/`@@E0@@`, `@@B1@@`/`@@E1@@`, ...) inserted before processing to mark bold spans, then located and converted to `rich` markup *after* processing — since a naive single generic marker pair broke under bidi reordering with multiple bold segments in one line (the reordering could separate a "begin" marker from its own segment and pair it with a different segment's "end" marker).
+
+**A terminal can lie to you, even about your own correct output.** While debugging the sentinel-marker approach, a `print()`-based visual check suggested markers were being scrambled in an unexpected way. Verifying the actual string content programmatically (`string.index(...)` comparisons) instead of trusting the terminal's rendering revealed the string was already correct — the terminal itself was misrepresenting it. This became a recurring theme: several "bugs" turned out to be terminal-rendering artifacts, not code defects, and were only resolved by testing data directly rather than trusting how it looked on screen.
 
 ---
 
 ## Roadmap
 
-- [ ] Finish the custom Arabic Markdown renderer (headers, bold, lists, mixed Arabic/English/citation text)
+- [ ] Finish the Groq agent's model-selection integration into `main.py`
 - [ ] Add response caching to avoid re-fetching the same pages across sessions
 - [ ] Explore streaming output for the final answer
 
