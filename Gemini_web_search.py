@@ -8,13 +8,7 @@ import time
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
-import arabic_reshaper
-from bidi.algorithm import get_display
-
-
-def format_bidi_text(text):
-    reshaped = arabic_reshaper.reshape(text)
-    return get_display(reshaped)
+from arabic_parser import ArabicParser
 
 def print_sources_table(all_sources, final, is_cited, console):
     cited_sources = [
@@ -58,9 +52,10 @@ def is_cited(source_num: int, text: str) -> bool:
 def start_gemini_agent():
     load_dotenv()
     console = Console()
+    parser = ArabicParser()
 
     client = genai.Client(api_key=os.environ.get("Gemini_API_KEY"))
-
+    
     tools_schema = [
         {
             "type": "function",
@@ -98,9 +93,7 @@ def start_gemini_agent():
         },
     ]
 
-
     available_functions = {"web_search": web_search, "fetch_page": fetch_page}
-
 
     system_instruction=(
         "You are a research assistant. Use web_search to find current information "
@@ -115,9 +108,7 @@ def start_gemini_agent():
     while True:
         user_query = input("\nAsk a question (or type 'exit' to quit): ")
         if user_query.strip().lower() == 'exit':
-            break 
-
-        user_query = format_bidi_text(user_query)
+            break
 
         all_sources.clear()  # Clear the global list of sources before starting a new session
 
@@ -196,7 +187,10 @@ def start_gemini_agent():
             )
 
         console.print("\n[bold green]FINAL RESPONSE[/bold green]\n")
-        final = format_bidi_text(final)
-        console.print(Markdown(final))
-        
+
+        if parser.contains_arabic(final):
+            parser.render_arabic_markdown(final, console)
+        else:
+            console.print(Markdown(final))
+
         print_sources_table(all_sources, final, is_cited, console)
