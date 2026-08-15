@@ -196,12 +196,11 @@ def start_gemini_agent():
                 response.output_text
             )
 
-
         if parser.contains_arabic(final):
-            console.print("\n[bold green]الجواب النهائي[/bold green]\n")
+            console.print("\n[bold green]" + "الجواب النهائي:" + "[/bold green]\n")
             parser.render_arabic_markdown(final, console)
         else:
-            console.print("\n[bold green]FINAL RESPONSE[/bold green]\n")
+            console.print("\n[bold green]FINAL RESPONSE:[/bold green]\n")
             console.print(Markdown(final))
 
         print_sources_table(all_sources, final, is_cited, console)
