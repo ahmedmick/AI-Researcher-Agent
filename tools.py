@@ -10,7 +10,7 @@ tavily_client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY"))
 
 all_sources = []  # Global list to store all sources across multiple web_search calls
 
-def web_search(query:str, max_results: int = 5) -> str:
+def web_search(query:str, max_results: int = 5, **kwargs) -> str:
     """Search the web and return a compact string of results for the LLM."""
 
     response = tavily_client.search(
@@ -33,7 +33,7 @@ def web_search(query:str, max_results: int = 5) -> str:
         )
     return "\n\n".join(formatted)
 
-def fetch_page(url: str) -> str:
+def fetch_page(url: str, **kwargs) -> str:
     """Fetch the content of a web page given its URL."""
     try:
         response = requests.get(
