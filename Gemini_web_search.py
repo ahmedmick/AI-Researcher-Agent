@@ -11,8 +11,15 @@ from rich.table import Table
 from arabic_parser import ArabicParser
 
 def print_sources_table(all_sources, final, is_cited, console):
+    parser = ArabicParser()
     cited_sources = [
-        (i, title, url) for i, title, url in all_sources if is_cited(i, final)
+        (
+            i, 
+            title if parser.is_mintty() else parser.format_bidi_text(title), 
+            url
+        )
+        for i, title, url in all_sources
+        if is_cited(i, final)
     ]
 
     if not cited_sources:
@@ -187,11 +194,12 @@ def start_gemini_agent():
                 response.output_text
             )
 
-        console.print("\n[bold green]FINAL RESPONSE[/bold green]\n")
 
         if parser.contains_arabic(final):
+            console.print("\n[bold green]الجواب النهائي[/bold green]\n")
             parser.render_arabic_markdown(final, console)
         else:
+            console.print("\n[bold green]FINAL RESPONSE[/bold green]\n")
             console.print(Markdown(final))
 
         print_sources_table(all_sources, final, is_cited, console)
