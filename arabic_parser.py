@@ -117,11 +117,3 @@ class ArabicParser():
 
     def is_mintty(self):
         return os.environ.get("MSYSTEM") is not None
-
-x = ArabicParser()
-test = x.insert_bold_markers("ذاك **Minecraft** [4].")
-print(repr(test))
-
-reshaped = arabic_reshaper.reshape(test)
-bidi_result = get_display(reshaped)
-print(repr(bidi_result))
