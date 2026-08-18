@@ -6,6 +6,11 @@ Instead of using a framework (LangChain, etc.), this project implements the core
 
 ---
 
+## Overview
+<video src="https://github.com/user-attachments/assets/f1e6074d-512b-4dfb-ba25-e1ed2c826694" width="80%" controls muted></video>
+
+---
+
 ## Features
 
 - 🔎 **Web search** via the [Tavily](https://tavily.com) API
