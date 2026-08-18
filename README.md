@@ -7,10 +7,7 @@ Instead of using a framework (LangChain, etc.), this project implements the core
 ---
 
 ## Overview
-<!-- <video src="https://github.com/user-attachments/assets/f1e6074d-512b-4dfb-ba25-e1ed2c826694" width="80%" loop autoplay controls muted></video> -->
-<p align="center">
-    <img width="800" height="450" alt="example" src="https://github.com/user-attachments/assets/24c31a1e-4868-4e1e-a5d0-285672f3632b" />
-</p>
+<video src="https://github.com/user-attachments/assets/f1e6074d-512b-4dfb-ba25-e1ed2c826694" width="80%" loop autoplay controls muted></video>
 
 ---
 
